@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Космический Раннер: Горизонтальный Финал</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: radial-gradient(circle at center, #0c1020 0%, #05070f 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            user-select: none;
+            overflow: hidden;
+            touch-action: none; 
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+        }
+        
+        #scoreBoard {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #fff;
+            text-shadow: 0 0 10px #00d2ff, 0 0 20px #00d2ff;
+        }
+        
+        /* Игровое поле — снова широкое и горизонтальное */
+        #gameArea {
+            width: 95vw;
+            max-width: 850px;
+            height: 320px; 
+            border-bottom: 5px solid #00f0ff; 
+            background: #070913;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0px 0px 40px rgba(0, 240, 255, 0.3);
+            border-radius: 12px;
+        }
+
+        /* --- ОБЪЕМНЫЙ КОСМИЧЕСКИЙ ФОН --- */
+        .space-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        
+        .nebula {
+            background: radial-gradient(circle at 80% 20%, rgba(122, 29, 253, 0.25) 0%, transparent 50%),
+                        radial-gradient(circle at 20% 70%, rgba(0, 240, 255, 0.15) 0%, transparent 45%);
+        }
+        
+        .planet-saturn {
+            position: absolute;
+            top: 30px; right: 150px; width: 70px; height: 70px;
+            background: radial-gradient(circle at 30% 30%, #ffaa00, #883300);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 170, 0, 0.4);
+        }
+        .planet-saturn::before {
+            content: ''; position: absolute; top: 30px; left: -15px; width: 100px; height: 8px;
+            background: rgba(255, 200, 100, 0.5); border-radius: 50%; transform: rotate(-15deg);
+        }
+        
+        .planet-small {
+            position: absolute; top: 130px; left: 250px; width: 30px; height: 30px;
+            background: radial-gradient(circle at 30% 30%, #00ffcc, #004433);
+            border-radius: 50%; box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+        }
+        
+        .comet {
+            position: absolute; top: -20px; left: 350px; width: 4px; height: 90px;
+            background: linear-gradient(to bottom, white, transparent);
+            transform: rotate(45deg); opacity: 0.4;
+        }
+        
+        .star { position: absolute; background: white; border-radius: 50%; box-shadow: 0 0 8px white; }
+
+        /* --- ЖЕЛЕЗНОЕ ВЫРАВНИВАНИЕ ПЕРСОНАЖЕЙ ПО НИЖНЕМУ КРАЮ --- */
+        #playerContainer {
+            width: 95px;
+            height: 125px;
+            position: absolute;
+            bottom: 0;
+            left: 60px;
+            display: flex;
+            align-items: flex-end;
+            z-index: 5;
+        }
+        #catdog {
+            width: 100%;
+            height: 100%;
+            background: url('catdog.png') no-repeat center bottom;
+            background-size: contain;
+        }
+        
+        #obstacleContainer {
+            width: 85px;
+            height: 55px;
+            position: absolute;
+            bottom: 0;
+            right: -100px;
+            display: flex;
+            align-items: flex-end;
+            z-index: 5;
+        }
+        #obstacle {
+            width: 100%;
+            height: 100%;
+            background: url('obstacle.png') no-repeat center bottom;
+            background-size: contain;
+        }
+        
+        /* --- ЭКРАН GAME OVER (ЗОЛОТАЯ СЕРЕДИНА ФОТОГРАФИИ) --- */
+        #gameOverScreen {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(10, 12, 22, 0.7), rgba(10, 12, 22, 0.7)), 
+                        url('gameover_bg.jpg') no-repeat center 68%;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        #gameOverBox {
+            background: rgba(15, 18, 36, 0.85);
+            padding: 25px 45px;
+            border-radius: 16px;
+            border: 2px solid #ff0055;
+            box-shadow: 0 0 30px rgba(255, 0, 85, 0.4);
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        #gameOverText {
+            font-size: 48px;
+            color: #ff0055;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
+            margin: 0 0 10px 0;
+        }
+
+        #restartHint {
+            font-size: 20px; 
+            color: #00d2ff;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+        }
+
+        /* --- БЛОКИРОВЩИК ВЕРТИКАЛЬНОГО ЭКРАНА --- */
+        #orientationOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #070913;
+            z-index: 9999;
+            color: white;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .rotate-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: rotateAnim 2s infinite ease-in-out;
+        }
+
+        @keyframes rotateAnim {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        /* Если экран телефона вертикальный (портретный) — показываем заглушку */
+        @media (orientation: portrait) and (max-width: 900px) {
+            #orientationOverlay {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="orientationOverlay">
+    <div class="rotate-icon">🔄</div>
+    <h2>Пожалуйста, переверните телефон горизонтально</h2>
+    <p>Для комфортной игры необходим альбомный режим</p>
+</div>
+
+<div id="scoreBoard">Очки: <span id="score">0</span></div>
+
+<div id="gameArea">
+    <div class="space-bg nebula"></div>
+    <div class="comet"></div>
+    <div class="planet-saturn"></div>
+    <div class="planet-small"></div>
+    
+    <div class="star" style="top: 30px; left: 80px; width: 3px; height: 3px; opacity: 0.9;"></div>
+    <div class="star" style="top: 120px; left: 400px; width: 2px; height: 2px; opacity: 0.6;"></div>
+    <div class="star" style="top: 60px; left: 700px; width: 4px; height: 4px; opacity: 0.8;"></div>
+    <div class="star" style="top: 220px; left: 180px; width: 2px; height: 2px; opacity: 0.5;"></div>
+
+    <div id="playerContainer">
+        <div id="catdog"></div>
+    </div>
+    
+    <div id="obstacleContainer">
+        <div id="obstacle"></div>
+    </div>
+    
+    <div id="gameOverScreen">
+        <div id="gameOverBox">
+            <h1 id="gameOverText">GAME OVER</h1>
+            <div id="restartHint">Тапни по экрану для перезапуска</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const gameArea = document.getElementById('gameArea');
+    const playerContainer = document.getElementById('playerContainer');
+    const obstacleContainer = document.getElementById('obstacleContainer');
+    const scoreElement = document.getElementById('score');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+
+    let isJumping = false;
+    let gravity = 0.55; 
+    let position = 0; 
+    let speedY = 0;   
+
+    let obstacleLeft = 900;
+    let obstacleSpeed = 7.5;
+    let score = 0;
+    let isGameOver = false;
+
+    function jump() {
+        if (isJumping) {
+            speedY -= gravity; 
+            position += speedY;
+
+            if (position <= 0) {
+                position = 0;
+                speedY = 0;
+                isJumping = false;
+            }
+            playerContainer.style.bottom = position + 'px';
+        }
+    }
+
+    function gameLoop() {
+        if (isGameOver) return;
+
+        jump();
+
+        // Движение препятствия
+        obstacleLeft -= obstacleSpeed;
+        if (obstacleLeft < -100) {
+            obstacleLeft = gameArea.clientWidth + 20; 
+            score++;            
+            scoreElement.innerText = score;
+            if (obstacleSpeed < 17) obstacleSpeed += 0.3; 
+        }
+        obstacleContainer.style.left = obstacleLeft + 'px';
+
+        // Проверка столкновения в горизонтальной плоскости
+        if (obstacleLeft > 35 && obstacleLeft < 125) {
+            if (position < 55) {
+                isGameOver = true;
+                gameOverScreen.style.display = 'flex';
+            }
+        }
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    // Обработчик Тапов (Прыжок / Рестарт)
+    function handleAction() {
+        // Если экран заблокирован из-за неверной ориентации — ничего не делаем
+        if (window.innerHeight > window.innerWidth && window.innerWidth < 900) return;
+
+        if (isGameOver) {
+            isGameOver = false;
+            gameOverScreen.style.display = 'none';
+            obstacleLeft = gameArea.clientWidth + 20;
+            score = 0;
+            scoreElement.innerText = score;
+            obstacleSpeed = 7.5;
+            position = 0;
+            isJumping = false;
+            playerContainer.style.bottom = '0px';
+            requestAnimationFrame(gameLoop);
+        } else if (!isJumping) {
+            isJumping = true;
+            speedY = 14.5; 
+        }
+    }
+
+    // Тачскрин (Телефоны)
+    document.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        handleAction();
+    }, { passive: false });
+
+    // Пробел (ПК)
+    document.addEventListener('keydown', function(event) {
+        if (event.code === 'Space') {
+            handleAction();
+        }
+    });
+
+    // На старте выкатываем препятствие за пределы текущей ширины поля
+    setTimeout(() => {
+        obstacleLeft = gameArea.clientWidth + 20;
+    }, 100);
+
+    requestAnimationFrame(gameLoop);
+</script>
+
+</body>
+</html>
