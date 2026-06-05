@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Космический Раннер: Финал</title>
+    <title>Космический Раннер: Система Рекордов</title>
     <style>
         body {
             display: flex;
@@ -21,25 +21,38 @@
             -webkit-user-select: none;
         }
         
-        #scoreBoard {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #fff;
-            text-shadow: 0 0 10px #00d2ff, 0 0 20px #00d2ff;
-        }
-        
-        /* Игровое поле — адаптивное и широкое */
+        /* Игровое поле */
         #gameArea {
             width: 95vw;
             max-width: 850px;
-            height: 320px; 
+            height: 280px; 
             border-bottom: 5px solid #00f0ff; 
             background: #070913;
             position: relative;
             overflow: hidden;
             box-shadow: 0px 0px 40px rgba(0, 240, 255, 0.3);
             border-radius: 12px;
+        }
+
+        /* Общая плашка для очков и рекорда внутри поля */
+        #scoreBoard {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px #00d2ff, 0 0 20px #00d2ff;
+            z-index: 8;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        #highScoreTextLive {
+            font-size: 18px;
+            color: #00f0ff;
+            opacity: 0.9;
         }
 
         /* --- ОБЪЕМНЫЙ КОСМИЧЕСКИЙ ФОН --- */
@@ -56,28 +69,28 @@
         
         .planet-saturn {
             position: absolute;
-            top: 30px; right: 150px; width: 70px; height: 70px;
+            top: 20px; right: 120px; width: 60px; height: 60px;
             background: radial-gradient(circle at 30% 30%, #ffaa00, #883300);
             border-radius: 50%;
             box-shadow: 0 0 20px rgba(255, 170, 0, 0.4);
         }
         .planet-saturn::before {
-            content: ''; position: absolute; top: 30px; left: -15px; width: 100px; height: 8px;
+            content: ''; position: absolute; top: 25px; left: -12px; width: 85px; height: 6px;
             background: rgba(255, 200, 100, 0.5); border-radius: 50%; transform: rotate(-15deg);
         }
         
         .planet-small {
-            position: absolute; top: 130px; left: 250px; width: 30px; height: 30px;
+            position: absolute; top: 110px; left: 250px; width: 25px; height: 25px;
             background: radial-gradient(circle at 30% 30%, #00ffcc, #004433);
             border-radius: 50%; box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
         }
         
         .star { position: absolute; background: white; border-radius: 50%; box-shadow: 0 0 8px white; }
 
-        /* --- АБСОЛЮТНОЕ ВЫРАВНИВАНИЕ ПЕРСОНАЖЕЙ (СТРОГО НА ОДНОМ УРОВНЕ) --- */
+        /* --- АБСОЛЮТНОЕ ВЫРАВНИВАНИЕ ПЕРСОНАЖЕЙ --- */
         #playerContainer {
-            width: 95px;
-            height: 125px;
+            width: 85px;
+            height: 110px;
             position: absolute;
             bottom: 0;
             left: 60px;
@@ -93,8 +106,8 @@
         }
         
         #obstacleContainer {
-            width: 85px;
-            height: 55px;
+            width: 75px;
+            height: 50px;
             position: absolute;
             bottom: 0;
             right: -100px;
@@ -109,15 +122,14 @@
             background-size: contain;
         }
         
-        /* --- ЭКРАН GAME OVER С ИДЕАЛЬНЫМ ОТОБРАЖЕНИЕМ ВЕРТИКАЛЬНОГО ФОТО --- */
+        /* --- ЭКРАН GAME OVER --- */
         #gameOverScreen {
             display: none;
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            /* Градиент уходит в черноту слева, а справа аккуратно садится оригинальное фото */
             background: linear-gradient(to right, rgba(7, 9, 19, 0.95) 40%, rgba(7, 9, 19, 0.4) 100%), 
                         url('gameover_bg.jpg') no-repeat right 35%;
-            background-size: contain; /* Картинка больше не обрезается до ушей! */
+            background-size: contain;
             z-index: 10;
             box-sizing: border-box;
             padding-left: 5%;
@@ -127,7 +139,7 @@
 
         #gameOverBox {
             background: rgba(15, 18, 36, 0.85);
-            padding: 25px 40px;
+            padding: 20px 35px;
             border-radius: 16px;
             border: 2px solid #ff0055;
             box-shadow: 0 0 30px rgba(255, 0, 85, 0.4);
@@ -136,15 +148,30 @@
         }
 
         #gameOverText {
-            font-size: 42px;
+            font-size: 38px;
             color: #ff0055;
             font-weight: bold;
             text-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
-            margin: 0 0 10px 0;
+            margin: 0 0 5px 0;
+        }
+
+        #finalScoreText {
+            font-size: 20px;
+            color: #fff;
+            margin: 0 0 5px 0;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+        }
+
+        #bestScoreText {
+            font-size: 18px;
+            color: #00ffcc;
+            margin: 0 0 15px 0;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
         }
 
         #restartHint {
-            font-size: 18px; 
+            font-size: 16px; 
             color: #00d2ff;
             font-weight: bold;
             text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
@@ -191,9 +218,12 @@
     <p>Для комфортной игры необходим альбомный режим</p>
 </div>
 
-<div id="scoreBoard">Очки: <span id="score">0</span></div>
-
 <div id="gameArea">
+    <div id="scoreBoard">
+        <div>Очки: <span id="score">0</span></div>
+        <div id="highScoreTextLive">Рекорд: <span id="liveHighScore">0</span></div>
+    </div>
+
     <div class="space-bg nebula"></div>
     <div class="planet-saturn"></div>
     <div class="planet-small"></div>
@@ -201,7 +231,6 @@
     <div class="star" style="top: 30px; left: 80px; width: 3px; height: 3px; opacity: 0.9;"></div>
     <div class="star" style="top: 120px; left: 400px; width: 2px; height: 2px; opacity: 0.6;"></div>
     <div class="star" style="top: 60px; left: 700px; width: 4px; height: 4px; opacity: 0.8;"></div>
-    <div class="star" style="top: 220px; left: 180px; width: 2px; height: 2px; opacity: 0.5;"></div>
 
     <div id="playerContainer">
         <div id="catdog"></div>
@@ -214,7 +243,9 @@
     <div id="gameOverScreen">
         <div id="gameOverBox">
             <h1 id="gameOverText">GAME OVER</h1>
-            <div id="restartHint">Тапни или нажми Пробел</div>
+            <div id="finalScoreText">Ваш результат: 0 очков</div>
+            <div id="bestScoreText">Рекорд: 0 очков</div>
+            <div id="restartHint">Тапни по экрану для перезапуска</div>
         </div>
     </div>
 </div>
@@ -224,7 +255,10 @@
     const playerContainer = document.getElementById('playerContainer');
     const obstacleContainer = document.getElementById('obstacleContainer');
     const scoreElement = document.getElementById('score');
+    const liveHighScoreElement = document.getElementById('liveHighScore');
     const gameOverScreen = document.getElementById('gameOverScreen');
+    const finalScoreText = document.getElementById('finalScoreText');
+    const bestScoreText = document.getElementById('bestScoreText');
 
     let isJumping = false;
     let gravity = 0.55; 
@@ -235,6 +269,10 @@
     let obstacleSpeed = 7.5;
     let score = 0;
     let isGameOver = false;
+
+    // ЗАГРУЗКА РЕКОРДА ИЗ ПАМЯТИ БРАУЗЕРА
+    let highScore = localStorage.getItem('corgiRunnerHighScore') ? parseInt(localStorage.getItem('corgiRunnerHighScore')) : 0;
+    liveHighScoreElement.innerText = highScore;
 
     function jump() {
         if (isJumping) {
@@ -265,14 +303,47 @@
         obstacleContainer.style.left = obstacleLeft + 'px';
 
         // Проверка столкновения
-        if (obstacleLeft > 35 && obstacleLeft < 125) {
-            if (position < 55) {
+        if (obstacleLeft > 35 && obstacleLeft < 115) {
+            if (position < 45) {
                 isGameOver = true;
-                gameOverScreen.style.display = 'flex';
+                handleGameOver();
             }
         }
 
         requestAnimationFrame(gameLoop);
+    }
+
+    // ЛОГИКА СОХРАНЕНИЯ РЕКОРДА ПРИ ПРОИГРЫШЕ
+    function handleGameOver() {
+        let isNewRecord = false;
+        
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('corgiRunnerHighScore', highScore); // Сохраняем в память телефона/ПК
+            liveHighScoreElement.innerText = highScore;
+            isNewRecord = true;
+        }
+
+        finalScoreText.innerText = `Ваш результат: ${score} ${getOchkiWord(score)}`;
+        
+        if (isNewRecord) {
+            bestScoreText.innerText = `🎉 НОВЫЙ РЕКОРД! 🎉`;
+            bestScoreText.style.color = '#00ff3c';
+        } else {
+            bestScoreText.innerText = `Лучший результат: ${highScore} ${getOchkiWord(highScore)}`;
+            bestScoreText.style.color = '#00ffcc';
+        }
+
+        gameOverScreen.style.display = 'flex';
+    }
+
+    function getOchkiWord(number) {
+        const lastDigit = number % 10;
+        const lastTwoDigits = number % 100;
+        if (lastTwoDigits >= 11 && lastTwoDigits <= 19) return 'очков';
+        if (lastDigit === 1) return 'очко';
+        if (lastDigit >= 2 && lastDigit <= 4) return 'очка';
+        return 'очков';
     }
 
     function handleAction() {
@@ -291,7 +362,7 @@
             requestAnimationFrame(gameLoop);
         } else if (!isJumping) {
             isJumping = true;
-            speedY = 14.5; 
+            speedY = 13.5; 
         }
     }
 
