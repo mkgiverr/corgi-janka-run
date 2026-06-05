@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Космический Раннер: Горизонтальный Финал</title>
+    <title>Космический Раннер: Финал</title>
     <style>
         body {
             display: flex;
@@ -29,7 +29,7 @@
             text-shadow: 0 0 10px #00d2ff, 0 0 20px #00d2ff;
         }
         
-        /* Игровое поле — снова широкое и горизонтальное */
+        /* Игровое поле — адаптивное и широкое */
         #gameArea {
             width: 95vw;
             max-width: 850px;
@@ -72,15 +72,9 @@
             border-radius: 50%; box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
         }
         
-        .comet {
-            position: absolute; top: -20px; left: 350px; width: 4px; height: 90px;
-            background: linear-gradient(to bottom, white, transparent);
-            transform: rotate(45deg); opacity: 0.4;
-        }
-        
         .star { position: absolute; background: white; border-radius: 50%; box-shadow: 0 0 8px white; }
 
-        /* --- ЖЕЛЕЗНОЕ ВЫРАВНИВАНИЕ ПЕРСОНАЖЕЙ ПО НИЖНЕМУ КРАЮ --- */
+        /* --- АБСОЛЮТНОЕ ВЫРАВНИВАНИЕ ПЕРСОНАЖЕЙ (СТРОГО НА ОДНОМ УРОВНЕ) --- */
         #playerContainer {
             width: 95px;
             height: 125px;
@@ -115,24 +109,25 @@
             background-size: contain;
         }
         
-        /* --- ЭКРАН GAME OVER (ЗОЛОТАЯ СЕРЕДИНА ФОТОГРАФИИ) --- */
+        /* --- ЭКРАН GAME OVER С ИДЕАЛЬНЫМ ОТОБРАЖЕНИЕМ ВЕРТИКАЛЬНОГО ФОТО --- */
         #gameOverScreen {
             display: none;
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(10, 12, 22, 0.7), rgba(10, 12, 22, 0.7)), 
-                        url('gameover_bg.jpg') no-repeat center 68%;
-            background-size: cover;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            /* Градиент уходит в черноту слева, а справа аккуратно садится оригинальное фото */
+            background: linear-gradient(to right, rgba(7, 9, 19, 0.95) 40%, rgba(7, 9, 19, 0.4) 100%), 
+                        url('gameover_bg.jpg') no-repeat right 35%;
+            background-size: contain; /* Картинка больше не обрезается до ушей! */
             z-index: 10;
+            box-sizing: border-box;
+            padding-left: 5%;
+            align-items: center;
+            justify-content: flex-start;
         }
 
         #gameOverBox {
             background: rgba(15, 18, 36, 0.85);
-            padding: 25px 45px;
+            padding: 25px 40px;
             border-radius: 16px;
             border: 2px solid #ff0055;
             box-shadow: 0 0 30px rgba(255, 0, 85, 0.4);
@@ -141,7 +136,7 @@
         }
 
         #gameOverText {
-            font-size: 48px;
+            font-size: 42px;
             color: #ff0055;
             font-weight: bold;
             text-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
@@ -149,7 +144,7 @@
         }
 
         #restartHint {
-            font-size: 20px; 
+            font-size: 18px; 
             color: #00d2ff;
             font-weight: bold;
             text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
@@ -183,11 +178,8 @@
             100% { transform: rotate(0deg); }
         }
 
-        /* Если экран телефона вертикальный (портретный) — показываем заглушку */
         @media (orientation: portrait) and (max-width: 900px) {
-            #orientationOverlay {
-                display: flex;
-            }
+            #orientationOverlay { display: flex; }
         }
     </style>
 </head>
@@ -203,7 +195,6 @@
 
 <div id="gameArea">
     <div class="space-bg nebula"></div>
-    <div class="comet"></div>
     <div class="planet-saturn"></div>
     <div class="planet-small"></div>
     
@@ -223,7 +214,7 @@
     <div id="gameOverScreen">
         <div id="gameOverBox">
             <h1 id="gameOverText">GAME OVER</h1>
-            <div id="restartHint">Тапни по экрану для перезапуска</div>
+            <div id="restartHint">Тапни или нажми Пробел</div>
         </div>
     </div>
 </div>
@@ -264,7 +255,6 @@
 
         jump();
 
-        // Движение препятствия
         obstacleLeft -= obstacleSpeed;
         if (obstacleLeft < -100) {
             obstacleLeft = gameArea.clientWidth + 20; 
@@ -274,7 +264,7 @@
         }
         obstacleContainer.style.left = obstacleLeft + 'px';
 
-        // Проверка столкновения в горизонтальной плоскости
+        // Проверка столкновения
         if (obstacleLeft > 35 && obstacleLeft < 125) {
             if (position < 55) {
                 isGameOver = true;
@@ -285,9 +275,7 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // Обработчик Тапов (Прыжок / Рестарт)
     function handleAction() {
-        // Если экран заблокирован из-за неверной ориентации — ничего не делаем
         if (window.innerHeight > window.innerWidth && window.innerWidth < 900) return;
 
         if (isGameOver) {
@@ -307,20 +295,17 @@
         }
     }
 
-    // Тачскрин (Телефоны)
     document.addEventListener('touchstart', function(e) {
         e.preventDefault();
         handleAction();
     }, { passive: false });
 
-    // Пробел (ПК)
     document.addEventListener('keydown', function(event) {
         if (event.code === 'Space') {
             handleAction();
         }
     });
 
-    // На старте выкатываем препятствие за пределы текущей ширины поля
     setTimeout(() => {
         obstacleLeft = gameArea.clientWidth + 20;
     }, 100);
